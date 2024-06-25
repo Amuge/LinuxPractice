@@ -3,10 +3,12 @@
 #include <utmp.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
 
 #define SHOWHOST
 
-void show_info(struct utmp *);
+void showtime(long);
+void show_info(struct utmp*);
 
 int main()
 {
@@ -29,15 +31,28 @@ int main()
 
 void show_info(struct utmp *utbufp)
 {
+    if (utbufp->ut_type != USER_PROCESS)
+        return;
+    
     printf("%-8.8s", utbufp->ut_user); // user name
     printf(" ");
     printf("%-8.8s", utbufp->ut_line); // device name
     printf(" ");
-    printf("%10d", utbufp->ut_time);
-    printf(" ");
+    showtime((long)(utbufp->ut_time));
 
 #ifdef SHOWHOST
-    printf("(%s)", utbufp->ut_host);
+    if(utbufp->ut_host[0] != '\0')
+        printf("(%s)", utbufp->ut_host);
 #endif
     printf("\n");
+}
+
+void showtime(long timeval)
+{
+    struct tm * timeinfo;
+    char buffer[30];
+
+    timeinfo = localtime(&timeval);
+    strftime(buffer, sizeof(buffer),"%Y-%m-%d %H:%M ",timeinfo);
+    printf("%s",buffer);
 }
